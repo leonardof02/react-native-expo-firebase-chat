@@ -1,37 +1,40 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { FirebaseAuthService } from "@/infrastructure/FirebaseAuthService";
+import AuthContextProvider from "@/presentation/common/context/AuthContext";
+import { router, Stack } from "expo-router";
+import { Button } from "react-native";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+    <AuthContextProvider>
+      <Stack
+        initialRouteName="chat"
+        screenOptions={{
+          title: "Login or Register",
+          statusBarColor: "#18181b",
+          headerTintColor: "#eee",
+          headerStyle: {
+            backgroundColor: "#18181b",
+          },
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: "Sign Up or Sign In" }} />
+        <Stack.Screen
+          name="chat/index"
+          options={{
+            title: "Chat",
+            headerRight: () => (
+              <Button
+                title="SignOut"
+                color={"#cc0000"}
+                onPress={async () => {
+                  await FirebaseAuthService.signOut();
+                  router.back();
+                }}
+              />
+            ),
+          }}
+        />
       </Stack>
-    </ThemeProvider>
+    </AuthContextProvider>
   );
 }
